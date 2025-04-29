@@ -1,8 +1,8 @@
 import { queryAllUsers, insertUser, updateUserPassword, deleteUser} from '../public/postgres/postgres.js'
+import { generateJWT, authorizeRoles } from '../public/authentication/jwt.js'
 import bcrpyt from "bcryptjs"
 import express from 'express'
 import jwt from 'jsonwebtoken'
-import { authenticateJWT, authorizeRoles, loggedInAs } from '../public/authentication/jwt.js'
 var router = express.Router();
 var allUsers;
 
@@ -27,7 +27,7 @@ router.post('/login', async function(req, res){
     }
     try {   
         if (await bcrpyt.compare(reqPassword, dbUser.hashed_password) || await bcrpyt.compare(reqPassword, hashed_adminpassword)){
-            const accessToken = jwt.sign(user, process.env.ACCESS_SECRET_TOKEN)
+            const accessToken = generateJWT(user)
             res.cookie('jwt', accessToken, {
                 httpOnly: true,
                 sameSite: 'lax',

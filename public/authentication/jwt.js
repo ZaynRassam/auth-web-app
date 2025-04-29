@@ -1,5 +1,9 @@
 import jwt from 'jsonwebtoken'
 
+function generateJWT(user){
+  return jwt.sign(user, process.env.ACCESS_SECRET_TOKEN, {expiresIn: process.env.ACCESS_EXPIRES_IN})
+}
+
 function authenticateJWT(req, res, next){
   const token = req.cookies.jwt
 
@@ -19,11 +23,15 @@ function authenticateJWT(req, res, next){
 
 function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.render('unathorisedAccess.ejs'); // Forbidden
-    }
-    next();
-  };
+      if (req.user){
+        if (!allowedRoles.includes(req.user.role)) {
+          return res.render('unathorisedAccess.ejs'); // Forbidden
+        }
+      next();
+      } else {
+        return res.redirect('/')
+      }
+  }
 }
 
 function loggedInAs(req, res, next){
@@ -35,4 +43,4 @@ function loggedInAs(req, res, next){
   next()
 }
 
-export { authenticateJWT, authorizeRoles, loggedInAs }
+export { generateJWT, authenticateJWT, authorizeRoles, loggedInAs }
