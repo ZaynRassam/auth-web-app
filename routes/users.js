@@ -2,22 +2,26 @@ import { queryAllUsers, insertUser, updateUserPassword, deleteUser} from '../pub
 import bcrpyt from "bcryptjs"
 import express from 'express'
 import jwt from 'jsonwebtoken'
+import { authenticateJWT, authorizeRoles, loggedInAs } from '../public/authentication/jwt.js'
 var router = express.Router();
 var allUsers;
 
 const hashed_adminpassword = await bcrpyt.hash(process.env.ADMINPASSWORD, 10)
 
 router.get('/login', function(req, res){
+    if (req.user){
+        return res.redirect('/')
+    }
     res.render("login.ejs", {userCreated: false, wrongCredentials: false})
 })
 
 router.post('/login', async function(req, res){
     const reqUsername = req.body.username.toLowerCase()
     const reqPassword = req.body.password
-
+    
     allUsers = await queryAllUsers()
     const dbUser = allUsers.find(dbUser => dbUser.username === reqUsername)
-    const user = { name: dbUser.username, role: dbUser.role}
+    const user = { username: dbUser.username, role: dbUser.role}
     if (dbUser == null) {
         return res.status(400).render("login.ejs", {userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
     }
@@ -29,7 +33,7 @@ router.post('/login', async function(req, res){
                 sameSite: 'lax',
                 path: '/'
             })
-            res.redirect('/admin')
+            res.redirect('/')
         } else {
             return res.status(400).render("login.ejs", {userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
         }
@@ -39,7 +43,15 @@ router.post('/login', async function(req, res){
     }
 })
 
+router.get('/logout', async function(req, res){
+    res.clearCookie('jwt', { httpOnly: true, sameSite: 'lax', secure: false });
+    res.redirect('/')
+})
+
 router.get("/signup", function(req, res){
+    if (req.user){
+        return res.redirect('/')
+    }
     res.render("signup.ejs", {})
 })
 
@@ -64,6 +76,9 @@ router.post('/signup', async function(req,res){
 })
 
 router.get("/update-password", function(req, res){
+    if (req.user){
+        return res.redirect('/')
+    }
     res.render("updateAccountPassword.ejs", {})
 })
 
@@ -91,11 +106,11 @@ router.post('/update-password', async function(req, res){
     }
 })
 
-router.get('/delete-user', function(req,res){
+router.get('/delete-user', authorizeRoles("admin"), function(req,res){
     res.render('deleteUser.ejs')
 })
 
-router.post('/delete-user', async function(req, res){
+router.post('/delete-user', authorizeRoles("admin"), async function(req, res){
     const reqUsername = req.body.username.toLowerCase()
     const reqPassword = req.body.password
 
