@@ -1,5 +1,4 @@
 import express from 'express'
-import { authenticateJWT, loggedInAs } from '../public/authentication/jwt.js';
 
 var router = express.Router();
 

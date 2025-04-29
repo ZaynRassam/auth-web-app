@@ -2,7 +2,6 @@ import { queryAllUsers, insertUser, updateUserPassword, deleteUser} from '../pub
 import { generateJWT, authorizeRoles } from '../public/authentication/jwt.js'
 import bcrpyt from "bcryptjs"
 import express from 'express'
-import jwt from 'jsonwebtoken'
 var router = express.Router();
 var allUsers;
 
