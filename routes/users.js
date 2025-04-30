@@ -78,7 +78,7 @@ router.get("/update-password", function(req, res){
     if (req.user){
         return res.redirect('/')
     }
-    res.render("updateAccountPassword.ejs", {})
+    res.render("updateAccountPassword.ejs", {user: req.user})
 })
 
 router.post('/update-password', async function(req, res){
