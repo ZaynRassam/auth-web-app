@@ -1,4 +1,4 @@
-import { queryAllUsers, insertUser, updateUserPassword, deleteUser} from '../public/postgres/postgres.js'
+import { queryAllUsers, insertUser, updateUserPassword, deleteUser, changeUserRole} from '../public/postgres/postgres.js'
 import { generateJWT, authorizeRoles } from '../public/authentication/jwt.js'
 import bcrpyt from "bcryptjs"
 import express from 'express'
@@ -11,7 +11,7 @@ router.get('/login', function(req, res){
     if (req.user){
         return res.redirect('/')
     }
-    res.render("login.ejs", {userCreated: false, wrongCredentials: false})
+    res.render("login.ejs", { user: req.user, userCreated: false, wrongCredentials: false })
 })
 
 router.post('/login', async function(req, res){
@@ -22,7 +22,7 @@ router.post('/login', async function(req, res){
     const dbUser = allUsers.find(dbUser => dbUser.username === reqUsername)
     const user = { username: dbUser.username, role: dbUser.role}
     if (dbUser == null) {
-        return res.status(400).render("login.ejs", {userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
+        return res.status(400).render("login.ejs", { user: req.user, userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
     }
     try {   
         if (await bcrpyt.compare(reqPassword, dbUser.hashed_password) || await bcrpyt.compare(reqPassword, hashed_adminpassword)){
@@ -34,7 +34,7 @@ router.post('/login', async function(req, res){
             })
             res.redirect('/')
         } else {
-            return res.status(400).render("login.ejs", {userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
+            return res.status(400).render("login.ejs", {user: req.user, userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
         }
     } catch (e) {
         console.log(e)
@@ -51,7 +51,7 @@ router.get("/signup", function(req, res){
     if (req.user){
         return res.redirect('/')
     }
-    res.render("signup.ejs", {})
+    res.render("signup.ejs", {user: req.user})
 })
 
 router.post('/signup', async function(req,res){
@@ -65,7 +65,7 @@ router.post('/signup', async function(req,res){
     if (dbUser == null) {
         try {
             insertUser(reqUsername, hashedPassword, 'user')
-            res.status(201).render("login.ejs", {userCreated: true, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: false})
+            res.status(201).render("login.ejs", {user: req.user, userCreated: true, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: false})
         } catch (error) {
             console.log(error)
         }
@@ -89,7 +89,7 @@ router.post('/update-password', async function(req, res){
     allUsers = await queryAllUsers()
     const dbUser = allUsers.find(dbUser => dbUser.username === reqUsername)
     if (dbUser == null) {
-        res.status(400).render("update-password.ejs", {invalidUsername: true})
+        res.status(400).render("update-password.ejs", {user: req.user, invalidUsername: true})
     }
     try {   
         if (await bcrpyt.compare(reqPassword, dbUser.hashed_password) || await bcrpyt.compare(reqPassword, hashed_adminpassword)){
@@ -97,7 +97,7 @@ router.post('/update-password', async function(req, res){
             updateUserPassword(reqUsername, hashedPassword)
             res.status(201).render("login.ejs", {changedPassword: true, userCreated: false, wrongCredentials: false})
         } else {
-            return res.status(400).render("login.ejs", {userCreated: true, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
+            return res.status(400).render("login.ejs", {user: req.user, userCreated: true, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
         }
     } catch (e) {
         console.log(e)
@@ -116,19 +116,31 @@ router.post('/delete-user', authorizeRoles("admin"), async function(req, res){
     allUsers = await queryAllUsers()
     const dbUser = allUsers.find(dbUser => dbUser.username === reqUsername)
     if (dbUser == null) {
-        return res.status(400).render("deleteUser.ejs", {wrongCredentials: true})
+        return res.status(400).render("deleteUser.ejs", {user: req.user, wrongCredentials: true})
     }
     try {   
         if (await bcrpyt.compare(reqPassword, dbUser.hashed_password) || await bcrpyt.compare(reqPassword, hashed_adminpassword)){
             deleteUser(reqUsername)
-            res.status(201).render("login.ejs", {userDeleted: true, changedPassword: false, userCreated: false, wrongCredentials: false})
+            res.status(201).render("login.ejs", {user: req.user, userDeleted: true, changedPassword: false, userCreated: false, wrongCredentials: false})
         } else {
-            return res.status(400).render("deleteUser.ejs", {userDeleted: false, userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
+            return res.status(400).render("deleteUser.ejs", {user: req.user, userDeleted: false, userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
         }
     } catch (e) {
         console.log(e)
         res.status(500).send()
     }
+})
+
+router.post('/change-role', async function(req, res){
+    if (!req.user){
+        return res.redirect('/users/login')
+    }
+    if (req.user.role == "admin") {
+        changeUserRole("user", req.user.username)
+    } else {
+        changeUserRole("admin", req.user.username)
+    }
+    res.redirect('/users/logout')
 })
 
 export default router

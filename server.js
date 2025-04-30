@@ -17,11 +17,15 @@ app.use(cookieParser())
 import indexRouter from './routes/index.js'
 import usersRouter from './routes/users.js'
 import adminRouter from './routes/admin.js'
+import pageNotFoundRouter from './routes/404.js'
+import aboutRouter from './routes/about.js'
 
 app.use(authenticateJWT)
 app.use(loggedInAs)
 app.use('/', indexRouter);
+app.use('/about', aboutRouter)
 app.use('/admin', adminRouter);
 app.use('/users', usersRouter);
+app.use(pageNotFoundRouter);
 
 app.listen(process.env.PORT)

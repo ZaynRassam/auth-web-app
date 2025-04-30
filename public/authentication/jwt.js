@@ -25,7 +25,7 @@ function authorizeRoles(...allowedRoles) {
   return (req, res, next) => {
       if (req.user){
         if (!allowedRoles.includes(req.user.role)) {
-          return res.render('unathorisedAccess.ejs'); // Forbidden
+          return res.render('unathorisedAccess.ejs', { user: req.user }); // Forbidden
         }
       next();
       } else {

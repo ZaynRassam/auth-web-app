@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
+<%- include('./partials/header') %>
 <body>
+    <%- include('./partials/nav-bar') %>
     <h2>You are unathorised to view this page</h2>
-    <form action="/">
-        <button>Return to Home</button>
+    <p>To showcase role-based access, Promote your role to ADMIN:</p><br>
+    <form action="/users/change-role" method="post">
+        <button>Admin</button>
     </form>
 </body>
 </html>

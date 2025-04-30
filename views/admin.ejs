@@ -1,19 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
+<%- include('./partials/header') %>
 <body>
+    <%- include('./partials/nav-bar') %>
     <h2>
         This is an admin only page.
     </h2>
-    <form action="/admin/2">
-        <button>2nd Admin only page</button>
-    </form>
-    <form action="/">
-        <button>Welcome page</button>
-    </form>
+    <p>To showcase role-based access, demote your role to USER:</p><br>
+    <form action="/users/change-role" method="post">
+    <button>User</button>
 </body>
 </html>
