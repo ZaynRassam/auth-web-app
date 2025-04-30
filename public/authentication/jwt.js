@@ -27,10 +27,10 @@ function authorizeRoles(...allowedRoles) {
         if (!allowedRoles.includes(req.user.role)) {
           return res.render('unathorisedAccess.ejs', { user: req.user }); // Forbidden
         }
-      next();
       } else {
-        return res.redirect('/')
+        return res.render('unathorisedAccess.ejs', { user: null });
       }
+      next();
   }
 }
 
