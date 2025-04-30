@@ -1,35 +1,34 @@
 # auth-web-app
 
 ## To Run
-1. ```npm i``` to install node_modules   
-2. Create a ```.env``` file in root folder
-3. ```npm start```
+
+The entire application runs off one command:
+```make deploy```
+
+To access the application, enter ```localhost:3000``` into your browser.
 
 ### .env
 
-CONSTRING=&lt;connection string for postgresdb&gt; 
-PORT=&lt;server port&gt;  
-ADMINPASSWORD=  
-ACCESS_SECRET_TOKEN=
-REFRESH_SECRET_TOKEN=
+CONSTRING=postgres://admin:root@postgres:5432/postgres  
+PORT=3000  
+ADMINPASSWORD=admin   
+ACCESS_SECRET_TOKEN=  
 
-### PostgresDB
+### pgAdmin & PostgresDB
 
-```
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    role VARCHAR(255) NOT NULL
-);
-```
+The ```init.sql``` script is automatically run by docker-compose and creates the necessary tables for the application.
 
-### ACCESS AND REFRESH SECRET TOKENS
+To view the database using pgAdmin:
+Connect to ```localhost:5050```. Login in with username and password (as dictated on the docker-compose.yml for the pgAdmin service)  
+Register a new server. Input ```postgres``` for the hostname, and the username and password (as dictated on the docker-compose.yml for the postgres service).
+
+There is a 10 second delay before the node.js container runs it's ```npm start``` command. This is because it needs to wait for postgres to create the table. In case 10 seconds is not enough time, the node.js app can be stopped and ran until it loads without error.
+
+### ACCESS SECRET TOKEN
 
 1. Open new terminal
 2. Run ```npm i crypto```
 3. Start a ```node``` session.
-4. Run ```require('crypto').randomBytes(64).toString('hex')``` twice.
-5. Use these two generated strings for the two secret tokens.
+4. Run ```require('crypto').randomBytes(64).toString('hex')```.
+5. Use the generated string to populate the secret token.
 
