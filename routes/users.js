@@ -1,5 +1,5 @@
 import { queryAllUsers, insertUser, updateUserPassword, deleteUser, changeUserRole} from '../public/postgres/postgres.js'
-import { generateJWT, authorizeRoles } from '../public/authentication/jwt.js'
+import { authenticateJWT, generateJWT, authorizeRoles } from '../public/authentication/jwt.js'
 import bcrpyt from "bcryptjs"
 import express from 'express'
 var router = express.Router();
@@ -20,10 +20,10 @@ router.post('/login', async function(req, res){
     
     allUsers = await queryAllUsers()
     const dbUser = allUsers.find(dbUser => dbUser.username === reqUsername)
-    const user = { username: dbUser.username, role: dbUser.role}
     if (dbUser == null) {
         return res.status(400).render("login.ejs", { user: req.user, userCreated: false, attemptedUsername: reqUsername, attemptedPassword: reqPassword, wrongCredentials: true})
     }
+    const user = { username: dbUser.username, role: dbUser.role}
     try {   
         if (await bcrpyt.compare(reqPassword, dbUser.hashed_password) || await bcrpyt.compare(reqPassword, hashed_adminpassword)){
             const accessToken = generateJWT(user)
@@ -105,11 +105,11 @@ router.post('/update-password', async function(req, res){
     }
 })
 
-router.get('/delete-user', authorizeRoles("admin"), function(req,res){
-    res.render('deleteUser.ejs')
+router.get('/delete-user', authenticateJWT, authorizeRoles("admin"), function(req,res){
+    res.render('deleteUser.ejs', {user: req.user})
 })
 
-router.post('/delete-user', authorizeRoles("admin"), async function(req, res){
+router.post('/delete-user', authenticateJWT, authorizeRoles("admin"), async function(req, res){
     const reqUsername = req.body.username.toLowerCase()
     const reqPassword = req.body.password
 

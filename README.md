@@ -32,3 +32,7 @@ There is a 10 second delay before the node.js container runs it's ```npm start``
 4. Run ```require('crypto').randomBytes(64).toString('hex')```.
 5. Use the generated string to populate the secret token.
 
+###
+
+Admins accounts can delete an account with the url ```localhost:3000/users/delete-user```.
+A master password has been set up if a password for another account has been forgotten. This is specified in the ```.env``` file.
